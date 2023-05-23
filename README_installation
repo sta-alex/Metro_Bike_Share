@@ -10,5 +10,10 @@ This file contains an Installation Guide to the Metro_Bike_Share Project
         python -m venv .venv
         and start the env from your project folder in your terminal with:
         ./venv/Scripts/Activate.ps1
+    - update pip installer in terminal with:
+        python.exe -m pip install --upgrade pip
     - install the packages with the pip installer needed for this project run in the Pycharm terminal:
-        pip install -r resources
+        pip install -r ./resources.txt
+    - if the python env interpreter is not automatically added, add the interpreter as virtual environment use the env
+      folder from this project
+    - run the project
