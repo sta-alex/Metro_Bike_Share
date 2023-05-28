@@ -1,31 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename= '/css/style.css') }}">
     <title>Metro Bike Share Los Angeles</title>
     <style>
         body {
             background-color: #333333;
             color: #ffffda;
+            text-align: center;
+            box-shadow: #333333;
+            padding: 20px;
             margin: 0;
+        }
+        .container {
+            background-color: #444444;
+            color: #fffffd;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 20px;
+            min-height: 100vh;
+            width: 100%; /* Set the width to 100% to occupy the entire horizontal space */
+
         }
 
         header {
             background-color: #222222;
             padding: 20px;
             text-align: center;
+            width: 100%; /* Set the width to 100% to occupy the entire horizontal space */
         }
 
-        h1 {
+        h1, h2, h3 {
             margin: 0;
-        }
-
-        .container {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            flex-wrap: wrap;
-            padding: 20px;
+            color: #fffffd;
         }
 
         .user-input {
@@ -35,11 +45,39 @@
             width: 45%;
         }
 
+        .ranking-container {
+            background-color: #444444;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 45%;
+            height: auto; /* Set the height to auto to adjust based on content */
+        }
+
+        .ranking-controls {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .ranking-label {
+            color: #ffffff;
+            margin-right: 10px;
+        }
+
+        .ranking-slider {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .ranking-input {
+            width: 50px;
+        }
+
         .map {
             background-color: #222222;
             padding: 20px;
             width: 100%;
-            height: 600px;
+            height: 800px;
         }
 
         .input-label {
@@ -70,11 +108,13 @@
             background-color: #222222;
             padding: 20px;
             text-align: center;
+            color: #ffffff;
         }
 
         /* Scrollbar Styling */
         ::-webkit-scrollbar {
             width: 10px;
+            background-color: #333333;
         }
 
         ::-webkit-scrollbar-track {
@@ -85,13 +125,61 @@
             background-color: #555555;
         }
     </style>
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            var rankingContainer = document.querySelector('.ranking-container');
+            var rankingSlider = document.querySelector('.ranking-slider');
+            var rankingInput = document.querySelector('.ranking-input');
+            var rankingList = document.querySelector('.ranking-list');
+
+            // Update the number of rankings based on slider value or input field value
+            function updateRankings() {
+                var value = parseInt(rankingSlider.value);
+                rankingInput.value = value;
+                rankingList.innerHTML = '';
+
+                // Generate and append new ranking items
+                for (var i = 1; i <= value; i++) {
+                    var rankingItem = document.createElement('li');
+                    rankingItem.classList.add('ranking-item');
+                    rankingItem.textContent = 'Item ' + i;
+                    rankingList.appendChild(rankingItem);
+                }
+            }
+
+            // Update rankings on slider change
+            rankingSlider.addEventListener('input', function() {
+                updateRankings();
+            });
+
+            // Update rankings on input field change
+            rankingInput.addEventListener('input', function() {
+                var value = parseInt(rankingInput.value);
+                if (value >= rankingSlider.min && value <= rankingSlider.max) {
+                    rankingSlider.value = value;
+                    updateRankings();
+                }
+            });
+
+            // Update slider on input field blur
+            rankingInput.addEventListener('blur', function() {
+                var value = parseInt(rankingInput.value);
+                if (isNaN(value) || value < rankingSlider.min || value > rankingSlider.max) {
+                    rankingInput.value = rankingSlider.value;
+                }
+            });
+
+            // Initial rankings update
+            updateRankings();
+        });
+    </script>
 </head>
 <body>
+<div class="container">
     <header>
         <h1>Metro Bike Share Los Angeles</h1>
     </header>
 
-    <div class="container">
         <div class="user-input">
             <h2>User Input</h2>
             <form action="/" method="POST">
@@ -101,22 +189,38 @@
                 <label class="input-label" for="longitude">Longitude:</label>
                 <input class="input-field" type="text" id="longitude" name="longitude" required><br><br>
 
-                <input class="submit-button" type="submit" value="View Map">
+                <input class="submit-button" type="submit" value="Submit Location">
             </form>
 
             {% if latitude and longitude %}
             <h3>Current Latitude: {{ latitude }}</h3>
             <h3>Current Longitude: {{ longitude }}</h3>
             {% endif %}
+
+            <div class="ranking-controls">
+                <label class="ranking-label" for="ranking-input">Number of Rankings:</label>
+                <input class="ranking-slider" type="range" min="1" max="{{ list_length }}" value="10">
+                <input class="ranking-input" type="number" min="1" max="{{ list_length }}" value="10">
+            </div>
+
+            <div class="ranking-container">
+                <h2 class="ranking-title">Top Rankings</h2>
+                <ul class="ranking-list">
+                    <!-- List items for rankings -->
+                </ul>
+            </div>
+
+
         </div>
-    </div>
 
     <div class="map">
         {% include 'map.html' %}
     </div>
 
     <footer>
-        <!-- Add footer content here -->
+        Data from: https://bikeshare.metro.net/stations/json
     </footer>
+
+</div>
 </body>
 </html>
