@@ -6,6 +6,8 @@ import geopandas
 import pandas
 from flask import Flask, render_template, request
 
+# default starting point Los Angeles
+default_latitude, default_longitude = 34.04919, -118.24799
 
 def get_GeoJSON():
     url = "https://bikeshare.metro.net/stations/json"
@@ -63,7 +65,7 @@ def get_GeoJSON():
 get_GeoJSON()
 
 
-def create_csv():  # creates the csv files from json and returns geodataframe
+def create_dataframe():  # creates the Geodataframe and creates a csv
     json_data = "data/geo_data.json"
     jsonfile = open(json_data)
     # geopanda dataframe
@@ -74,24 +76,70 @@ def create_csv():  # creates the csv files from json and returns geodataframe
 
 
 # creates the csv files from json and returns geodataframe
-df = create_csv()
+df = create_dataframe()
+
 
 
 def create_local_html_map(poslat, poslong):
     # Create a map centered at a specific location
-    m = folium.Map(location=[poslat, poslong], zoom_start=10)
+    m = folium.Map(location=[poslat, poslong],
+                   zoom_start=15,
+                   control_scale=True
+                   )
 
-    # Add a marker to the map
-    folium.Marker(location=[poslat, poslong], popup=f'Postition:\nlat: {poslat}\nlong: {poslong}').add_to(m)
-    # Add Station Marker
+    # Add My Position marker to the map
+    my_position = folium.Marker(location=[poslat, poslong],
+                                popup=f'Postition:\nlat: {poslat}\nlong: {poslong}',
+                                tooltip='My Position',
+                                icon=folium.Icon(color='black', icon="user")
+                                ).add_to(m)
 
+    # Add Station Markers to the map from the geodataframe
+    for idx, row in df.iterrows():
+        long, lat = row['geometry'].x, row['geometry'].y
+
+        if 'Active' in row['kioskPublicStatus'] and int(row['bikesAvailable']) > 5 and int(row['docksAvailable']) > 5:
+            color = 'green'
+            icon = 'ok-sign'
+        elif 'Active' in row['kioskPublicStatus'] and int(row['bikesAvailable']) >= 2 and int(
+                row['docksAvailable']) >= 2:
+            color = 'orange'
+            icon = 'info-sign'
+        elif 'Unavailable' in row['kioskPublicStatus'] or 'Active' in row['kioskPublicStatus']:
+            color = 'darkred'
+            icon = 'remove-sign'
+        else:
+            color = 'gray'
+            icon = 'search'
+
+        station_name = row['name']
+
+        popup_html = """
+        <b>Name:</b> {}<br>
+        <b>Street:</b> {}<br>
+        <b>Available Bikes:</b> {}<br>
+        <b>Available Docks:</b> {}<br>
+        <b>Status:</b> {}<br>
+        <b>Opening hours:</b> {} am - {} pm<br>
+        """.format(row['name'], row['addressStreet'], row['bikesAvailable'], row['docksAvailable'],
+                   row['kioskPublicStatus'], row['openTime'], row['closeTime'])
+        popup = folium.Popup(html=popup_html, max_width=250)
+        station_marker = folium.Marker(location=[lat, long],
+                                       tooltip=f'{station_name}',
+                                       popup=popup,
+                                       icon=folium.Icon(color=f'{color}',
+                                                        icon=f'{icon}')
+                                       ).add_to(m)
+
+    # Add Clickable map that Copies lat and long to clipboard
+    m.add_child(folium.ClickForLatLng())
     # Save the map as an HTML file
     map_file = 'templates/map.html'
     m.save(map_file)
 
 
 # Call the function to create and load the local HTML map
-create_local_html_map(34.04919, -118.24799)
+create_local_html_map(default_latitude, default_longitude)
 
 
 def run_map_viewer():
@@ -100,10 +148,9 @@ def run_map_viewer():
     @app.route('/', methods=['GET', 'POST'])
     def index():
         if request.method == 'POST':
-
             latitude = float(request.form['latitude'])
             longitude = float(request.form['longitude'])
-            create_local_html_map(latitude or 34.04919, longitude or -118.24799)
+            create_local_html_map(latitude or default_latitude, longitude or default_longitude)
             return render_template('index.html', latitude=latitude, longitude=longitude)
 
         return render_template('index.html')
@@ -112,5 +159,4 @@ def run_map_viewer():
         app.run(debug=True)
 
 
-if __name__ == '__main__':
-    run_map_viewer()
+run_map_viewer()

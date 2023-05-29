@@ -39,14 +39,14 @@
         }
 
         .user-input {
-            background-color: #444444;
+            background-color: #333333;
             padding: 20px;
             margin-bottom: 20px;
             width: 45%;
         }
 
         .ranking-container {
-            background-color: #444444;
+            background-color: #333333;
             padding: 20px;
             margin-bottom: 20px;
             width: 45%;
@@ -100,7 +100,20 @@
             cursor: pointer;
         }
 
+        .clipboard-button{
+            margin-top: 10px;
+            background-color: #555555;
+            color: #ffffff;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+        }
+
         .submit-button:hover {
+            background-color: #666666;
+        }
+
+        .clipboard-button:hover {
             background-color: #666666;
         }
 
@@ -173,6 +186,28 @@
             updateRankings();
         });
     </script>
+    <script>
+        // Function to handle "Copy from Clipboard" button click event
+        function copyFromClipboard() {
+            // Check if the Clipboard API is supported
+            if (navigator.clipboard && navigator.clipboard.readText) {
+                // Read the text from the clipboard
+                navigator.clipboard.readText().then(function(text) {
+                    // Extract the latitude and longitude from the clipboard text
+                    var coordinates = text.trim().split(',');
+                    if (coordinates.length === 2) {
+                        // Set the latitude and longitude values in the input fields
+                        document.getElementById('latitude').value = coordinates[0].trim();
+                        document.getElementById('longitude').value = coordinates[1].trim();
+                    }
+                }).catch(function(error) {
+                    console.error('Failed to read clipboard contents:', error);
+                });
+            } else {
+                console.error('Clipboard API not supported.');
+            }
+        }
+    </script>
 </head>
 <body>
 <div class="container">
@@ -190,17 +225,18 @@
                 <input class="input-field" type="text" id="longitude" name="longitude" required><br><br>
 
                 <input class="submit-button" type="submit" value="Submit Location">
+                <button class="clipboard-button" onclick="copyFromClipboard()">Copy from Clipboard</button>
             </form>
 
-            {% if latitude and longitude %}
-            <h3>Current Latitude: {{ latitude }}</h3>
-            <h3>Current Longitude: {{ longitude }}</h3>
-            {% endif %}
+
+            <h3>Current Latitude: {{ latitude or 34.04919}}</h3>
+            <h3>Current Longitude: {{ longitude or -118.24799}}</h3>
+
 
             <div class="ranking-controls">
-                <label class="ranking-label" for="ranking-input">Number of Rankings:</label>
+                <label class="ranking-label" for="ranking-input">Number of nearby:</label>
                 <input class="ranking-slider" type="range" min="1" max="{{ list_length }}" value="10">
-                <input class="ranking-input" type="number" min="1" max="{{ list_length }}" value="10">
+                <output class="ranking-input" type="number" min="1" max="{{ list_length }}" value="10">
             </div>
 
             <div class="ranking-container">
