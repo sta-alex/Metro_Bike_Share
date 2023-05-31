@@ -4,151 +4,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename= '/css/style.css') }}">
     <title>Metro Bike Share Los Angeles</title>
-    <style>
-        body {
-            background-color: #333333;
-            color: #ffffda;
-            text-align: center;
-            box-shadow: #333333;
-            padding: 20px;
-            margin: 0;
-            width: auto;
-        }
-        .container {
-            background-color: #444444;
-            color: #fffffd;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            flex-wrap: wrap;
-            padding: 20px;
-            min-height: 100vh;
-            width: 100%; /* Set the width to 100% to occupy the entire horizontal space */
-
-        }
-
-        header {
-            background-color: #222222;
-            padding: 20px;
-            text-align: center;
-            width: 100%; /* Set the width to 100% to occupy the entire horizontal space */
-        }
-
-        h1, h2, h3 {
-            margin: 0;
-            color: #fffffd;
-        }
-
-        .user-input {
-            background-color: #333333;
-            padding: 20px;
-            margin-bottom: 20px;
-            width: 45%;
-        }
-
-        .ranking-container {
-            background-color: #333333;
-            padding: 20px;
-            margin-bottom: 20px;
-            width: 45%;
-            height: auto; /* Set the height to auto to adjust based on content */
-        }
-
-        .ranking-controls {
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        .map {
-            background-color: #222222;
-            padding: 20px;
-            width: 100%;
-            height: 800px;
-        }
-
-        .input-label {
-            color: #ffffff;
-        }
-
-        .input-field {
-            background-color: #ffffff;
-            padding: 5px;
-            border: none;
-            width: 100%;
-        }
-
-        .submit-button {
-            margin-top: 10px;
-            background-color: #555555;
-            color: #ffffff;
-            padding: 5px 10px;
-            border: none;
-            cursor: pointer;
-        }
-
-        .clipboard-button{
-            margin-top: 10px;
-            background-color: #555555;
-            color: #ffffff;
-            padding: 5px 10px;
-            border: none;
-            cursor: pointer;
-        }
-
-        .submit-button:hover {
-            background-color: #666666;
-        }
-
-        .clipboard-button:hover {
-            background-color: #666666;
-        }
-
-        footer {
-            background-color: #222222;
-            padding: 20px;
-            text-align: center;
-            color: #ffffff;
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 10px;
-            background-color: #333333;
-        }
-
-        ::-webkit-scrollbar-track {
-            background-color: #222222;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background-color: #555555;
-        }
-        .dataframe-container {
-            background-color: #333333;
-            padding: 20px;
-            margin-bottom: 20px;
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        .dataframe-container table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .dataframe-container th,
-        .dataframe-container td {
-            padding: 8px;
-            border: 1px solid #111111;
-            text-align: left;
-        }
-
-        .dataframe-container th {
-            background-color: #222222;
-            font-weight: bold;
-        }
-    </style>
     <script>
         // Function to handle "Copy from Clipboard" button click event
         function copyFromClipboard() {
@@ -190,8 +45,9 @@
                 <input class="submit-button" type="submit" value="Submit Location">
                 <button class="clipboard-button" onclick="copyFromClipboard()">Copy from Clipboard</button><br>
 
-                <label><input type="checkbox" name="searchBike" id="searchBike"> Search Bike</label>
-                <label><input type="checkbox" name="searchDocks" id="searchDocks"> Search Docks</label><br><br>
+                <label><input class ="checkbox" type="checkbox" name="searchBike" id="searchBike"> Search Bike</label>
+                <label><input class ="checkbox" type="checkbox" name="searchDocks" id="searchDocks"> Search Docks</label>
+                <input class = "small-input" type="number" name="available_pieces" id="available_pieces" placeholder="min"><br><br>
 
                 <label class="input-label" for="rankings">Number of Rankings:</label>
                 <input class="input-field" type="text" id="rankings" name="rankings"><br><br>

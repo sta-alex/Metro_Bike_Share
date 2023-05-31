@@ -2,6 +2,158 @@
 
 /* Document
    ========================================================================== */
+body{
+    margin: 0;
+    padding: 0;
+}
+.container {
+
+    background-color: #444444;
+    color: #fffffd;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 20px;
+    min-height: 100vh;
+    margin-left: 0;  /* Add this line */
+    margin-right: 0; /* Add this line */
+    padding: 0:
+    padding-left: 0;
+    padding-right:0;
+}
+
+header {
+    background-color: #222222;
+    padding: 0px;
+    text-align: center;
+    width: 100%; /* Set the width to 100% to occupy the entire horizontal space */
+    max-width: 600%;
+    margin: 0;
+}
+
+h1, h2, h3 {
+    margin: 0;
+    color: #fffffd;
+}
+
+.user-input {
+    background-color: #333333;
+    padding: 20px;
+    margin-bottom: 20px;
+    width: 45%;
+}
+
+.ranking-container {
+    background-color: #333333;
+    padding: 20px;
+    margin-bottom: 20px;
+    width: 45%;
+    height: auto; /* Set the height to auto to adjust based on content */
+}
+
+.ranking-controls {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.map {
+    background-color: #222222;
+    padding: 20px;
+    width: 100%;
+    height: 800px;
+}
+
+.input-label {
+    color: #ffffff;
+}
+
+.input-field {
+    background-color: #ffffff;
+    padding: 5px;
+    border: none;
+    width: 100%;
+}
+
+.submit-button {
+    margin-top: 10px;
+    background-color: #555555;
+    color: #ffffff;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.clipboard-button{
+    margin-top: 10px;
+    background-color: #555555;
+    color: #ffffff;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.submit-button:hover {
+    background-color: #666666;
+}
+
+.clipboard-button:hover {
+    background-color: #666666;
+}
+
+footer {
+    background-color: #222222;
+    padding: 20px;
+    text-align: center;
+    color: #ffffff;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px;
+    background-color: #333333;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #222222;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #555555;
+}
+.dataframe-container {
+    background-color: #333333;
+    padding: 20px;
+    margin-bottom: 20px;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.dataframe-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dataframe-container th,
+.dataframe-container td {
+    padding: 8px;
+    border: 1px solid #111111;
+    text-align: left;
+}
+
+.dataframe-container th {
+    background-color: #222222;
+    font-weight: bold;
+}
+.small-input {
+    width: 50px;
+
+}
+
+.checkbox{
+    margin: 5px;
+}
 
 /**
  * 1. Correct the line height in all browsers.
@@ -21,10 +173,7 @@ html {
  * Remove the margin in all browsers.
  */
 
-body {
-  margin: 0;
 
-}
 
 /**
  * Render the `main` element consistently in IE.
