@@ -89,7 +89,7 @@ def create_dataframe():  # creates the Geodataframe and creates a csv
 # df = create_dataframe()
 
 
-def create_local_html_map(dataframe, poslat, poslong, k_nearest):
+def create_local_html_map(dataframe, poslat, poslong, k_nearest, destpoint=Point(0,0), route_coordinates=0):
 
     # Create a map centered at a specific location
     m = folium.Map(location=[poslat, poslong],
@@ -108,6 +108,16 @@ def create_local_html_map(dataframe, poslat, poslong, k_nearest):
     # returns a dataframe containing the k_nearest stations
     df_nearest = get_nearest_dataframe(dataframe, poslong, poslat, k_nearest)
 
+    if not (destpoint and route_coordinates) == 0:
+        folium.Marker(location=[destpoint.x, destpoint.y],
+                      popup=f'Postition:\nlat: {destpoint.x}\nlong: {destpoint.y}',
+                      tooltip='My Position Destination',
+                      icon=folium.Icon(color='black', icon="user")
+                      ).add_to(m)
+        folium.PolyLine(locations=route_coordinates, color='blue', weight=3).add_to(m)
+        df_nearest_route = get_nearest_dataframe(dataframe, destpoint.x, destpoint.y, k_nearest)
+        df_nearest = geopandas.GeoDataFrame.merge(df_nearest, df_nearest_route)
+
     print(df_nearest)
 
     # Add Station Markers to the map from the Geo dataframe
@@ -121,13 +131,14 @@ def create_local_html_map(dataframe, poslat, poslong, k_nearest):
         # add marker to map
         station_marker.add_to(m)
 
+
+
     # Add Clickable map that Copies lat and long to clipboard
     m.add_child(folium.ClickForLatLng())
 
     # Save the map as an HTML file
-    # map_file = 'templates/map.html'
-    # m.save(map_file)
     save_map(m)
+
     return df_nearest, m
 
 
@@ -269,28 +280,25 @@ def run_map_viewer():
             drop_if_number = request.form.get('available_pieces')
             drop_if_number = int(drop_if_number) if drop_if_number else 1
 
-            if dest_longitude and dest_latitude:
-                print("________________________ROUTING STARTED________________________")
-                rankings = 1
-                travel_mode = "bike"
-                source_point = create_point(latitude, longitude)
-                dest_point = create_point(dest_latitude, dest_longitude)
-                route_coordinates = find_route(source_point, dest_point, travel_mode)
-                print(route_coordinates)
-                gdf, m = create_local_html_map(df, latitude or default_latitude, longitude or default_longitude,
-                                               rankings)
-                folium.PolyLine(locations=route_coordinates, color='blue', weight=3).add_to(m)
-                save_map(m)
-                print("________________________ROUTING END________________________")
-
             # prepare Task1
             if search_bikes:
                 df = select_bikes(df, drop_if_number)
             # prepare Task2
             elif search_docks:
                 df = select_docks(df, drop_if_number)
-
-            gdf, m = create_local_html_map(df, latitude or default_latitude, longitude or default_longitude, rankings)
+            elif dest_longitude and dest_latitude:
+                print("________________________ROUTING STARTED________________________")
+                rankings = 1
+                travel_mode = "bike"
+                source_point = create_point(latitude, longitude)
+                dest_point = create_point(dest_latitude, dest_longitude)
+                route_coordinates = find_route(source_point, dest_point, travel_mode)
+                print("________________________ROUTING END________________________")
+                gdf, m = create_local_html_map(df, latitude or default_latitude, longitude or default_longitude,
+                                               rankings, dest_point, route_coordinates)
+            else:
+                gdf, m = create_local_html_map(df, latitude or default_latitude, longitude or default_longitude,
+                                               rankings)
 
             return render_template('index.html', latitude=latitude, longitude=longitude,
                                    search_bikes=search_bikes, search_docks=search_docks,
