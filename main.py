@@ -145,11 +145,9 @@ def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, de
 
 
 def get_nearest_dataframe(dataframe, poslong, poslat, k_nearest):
-    # my_position_point = Point(poslong, poslat)
-    # Convert the point to the needed crs system
-    # my_position_point = geopandas.GeoSeries([my_position_point], crs="EPSG:4326").to_crs("EPSG:3857").iloc[0]
+    # create a Geometric Point of the current position
     my_position_point = create_point(poslat, poslong, crs_routing_format, crs_map_format)
-    # Create a geodataframe only with necessary columns
+    # Create a  temporary geodataframe only with necessary columns
     gdf = dataframe.loc[:, ('kioskId', 'name', 'addressStreet', 'addressCity', 'addressState', 'addressZipCode',
                             'latitude', 'longitude', 'geometry')]
 
@@ -219,31 +217,6 @@ def create_markers(row, lat, long, color, icon):
 def save_map(m):
     map_file = 'templates/map.html'
     m.save(map_file)
-
-
-# def find_route(source_lat, source_long, dest_lat, dest_long, travel_type):
-#    # create points in "EPSG:4326"
-#    start_point = create_point(source_lat, source_long, crs_map_format, crs_routing_format)
-#    end_point = create_point(dest_lat, dest_long, crs_map_format, crs_routing_format)
-#    north_lat = 34.224313
-#    south_lat = 33.906345
-#    east_long = -118.180111
-#    west_long = -118.529665
-#    graph = osmnx.graph_from_bbox(north_lat, south_lat, east_long, west_long, network_type=travel_type, simplify=True)
-#    print("Graph_success")
-#    #new
-#    start_point = (source_lat, source_long)
-#    end_point = (dest_lat, dest_long)
-#    #find nearest nodes
-#    n_source = osmnx.distance.nearest_nodes(graph, source_long, source_lat, return_dist=True)
-#    n_dest = osmnx.distance.nearest_nodes(graph, dest_long, dest_lat, return_dist=True)
-#    osmnx_route = networkx.shortest_path(graph, n_source, n_dest, 'length')
-#
-#    edge_lengths = osmnx.utils_graph.get_route_edge_attributes(
-#                    graph, osmnx_route, 'length')
-#    route_len_m = sum(edge_lengths)
-#    print(route_len_m)
-#    return route_len_m
 
 def find_route(source_lat, source_long, dest_lat, dest_long, travel_type):
     route_folder = "routes"
