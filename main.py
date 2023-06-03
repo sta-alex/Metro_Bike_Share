@@ -323,8 +323,6 @@ def full_route(df, s_lat, s_long, d_lat, d_long):
 
     # distance from end station to end pos
     d_station_to_end = find_route(d_station_lat, d_station_long, d_lat, d_long, by_foot)
-    #full_coordinates = start_to_station + s_station_to_d_station + d_station_to_end
-    #full_coordinates = start_to_station + d_station_to_end
 
     return start_to_station, s_station_to_d_station, d_station_to_end
 
