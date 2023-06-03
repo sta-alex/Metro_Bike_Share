@@ -92,9 +92,17 @@ def create_dataframe():  # creates the Geodataframe and creates a csv
 
 
 def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, destlong=0.0,
-                          route_coordinates=geopandas.GeoDataFrame()):
-
+                          route_coordinates_bybike=None, route_foot_start=None, route_foot_end=None):
     # Create a map centered at a specific location
+    if route_foot_end is None:
+        route_foot_end = []
+
+    if route_foot_start is None:
+        route_foot_start = []
+
+    if route_coordinates_bybike is None:
+        route_coordinates_bybike = []
+
     m = folium.Map(location=[poslat, poslong],
                    zoom_start=15,
                    control_scale=True,
@@ -115,9 +123,12 @@ def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, de
         folium.Marker(location=[destlat, destlong],
                       popup=f'Postition:\nlat: {destlat}\nlong: {destlong}',
                       tooltip='My Position Destination',
-                      icon=folium.Icon(color='black', icon="user")
+                      icon=folium.Icon(color='black', icon="user", prefix='fa')
                       ).add_to(m)
-        folium.PolyLine(locations=route_coordinates, color='blue', weight=3).add_to(m)
+
+        folium.PolyLine(locations=route_foot_start, color='red', weight=4).add_to(m)
+        folium.PolyLine(locations=route_coordinates_bybike, color='blue', weight=4).add_to(m)
+        folium.PolyLine(locations=route_foot_end, color='orange', weight=4).add_to(m)
 
         df_nearest_route = get_nearest_dataframe(dataframe, destlong, destlat, k_nearest)
         df_nearest = pandas.concat([df_nearest, df_nearest_route])
@@ -168,24 +179,24 @@ def icon_color(row, df_nearest):
         if row['kioskId'] in df_nearest['kioskId'].values:
             color = 'darkgreen'
         else:
-            color = 'lightgreen'
-        icon = 'ok-sign'
+            color = 'green'
+        icon = 'bicycle'
     elif 'Active' in row['kioskPublicStatus'] and int(row['bikesAvailable']) >= 2 and int(
             row['docksAvailable']) >= 2:
         if row['kioskId'] in df_nearest['kioskId'].values:
             color = 'darkblue'
         else:
-            color = 'lightblue'
-        icon = 'info-sign'
+            color = 'blue'
+        icon = 'bicycle'
     elif 'Unavailable' in row['kioskPublicStatus'] or 'Active' in row['kioskPublicStatus']:
         if row['kioskId'] in df_nearest['kioskId'].values:
             color = 'darkred'
         else:
-            color = 'lightred'
-        icon = 'remove-sign'
+            color = 'red'
+        icon = 'bicycle'
     else:
         color = 'gray'
-        icon = 'search'
+        icon = 'magnifying-glass'
     return color, icon
 
 
@@ -209,7 +220,7 @@ def create_markers(row, lat, long, color, icon):
                                    tooltip=f'{station_name}',
                                    popup=popup,
                                    icon=folium.Icon(color=f'{color}',
-                                                    icon=f'{icon}')
+                                                    icon=f'{icon}', prefix='fa')
                                    )
     return station_marker
 
@@ -218,9 +229,10 @@ def save_map(m):
     map_file = 'templates/map.html'
     m.save(map_file)
 
+
 def find_route(source_lat, source_long, dest_lat, dest_long, travel_type):
     route_folder = "routes"
-    data_file = os.path.join(route_folder, "geo_data_route.json")
+    data_file = os.path.join(route_folder, f'geo_data_route_{travel_type}.json')
     #
     if not os.path.exists(route_folder):
         os.makedirs(route_folder)
@@ -241,13 +253,15 @@ def find_route(source_lat, source_long, dest_lat, dest_long, travel_type):
     #
     #
     route_folder = "routes"
-    data_file = os.path.join(route_folder, "geo_data_route.json")
+    data_file = os.path.join(route_folder, f'geo_data_route_{travel_type}.json')
     with open(data_file, 'r') as f:
         geojson_data = json.load(f)
 
     coordinates = geojson_data['features'][0]['geometry']['coordinates']
-
-    return coordinates
+    print(coordinates)
+    # Reverse the order of coordinates (longitude, latitude) to (latitude, longitude)
+    reversed_coordinates = [(coord[1], coord[0]) for coord in coordinates]
+    return reversed_coordinates
 
 
 def create_point(lat, long, crs_in, crs_out):
@@ -285,6 +299,36 @@ def request_lat_long(in_put):
     return out_put
 
 
+def full_route(df, s_lat, s_long, d_lat, d_long):
+
+    # only the nearest stations and min availability = 1
+    ranking = 1
+
+    # delete sations with no availability
+    df = select_bikes(df, ranking)
+    df = select_docks(df, ranking)
+
+    # distance from pos to start station
+    df_start_station = get_nearest_dataframe(df, s_long, s_lat, ranking)
+    s_station_lat = df_start_station.loc[:, ('latitude')].item()
+    print(s_station_lat)
+    s_station_long = df_start_station.loc[:, ('longitude')].item()
+    start_to_station = find_route(s_lat, s_long, s_station_lat, s_station_long, by_foot)
+
+    # distance from start station to end station
+    df_end_station = get_nearest_dataframe(df, d_long, d_lat, ranking)
+    d_station_lat = df_end_station.loc[:, ('latitude')].item()
+    d_station_long = df_end_station.loc[:, ('longitude')].item()
+    s_station_to_d_station = find_route(s_station_lat, s_station_long, d_station_lat, d_station_long, by_bike)
+
+    # distance from end station to end pos
+    d_station_to_end = find_route(d_station_lat, d_station_long, d_lat, d_long, by_foot)
+    #full_coordinates = start_to_station + s_station_to_d_station + d_station_to_end
+    #full_coordinates = start_to_station + d_station_to_end
+
+    return start_to_station, s_station_to_d_station, d_station_to_end
+
+
 def run_map_viewer():
     app = Flask(__name__)
 
@@ -317,12 +361,11 @@ def run_map_viewer():
                 df = select_docks(df, drop_if_number)
             if dest_longitude and dest_latitude:
                 print("________________________ROUTING STARTED________________________")
-                rankings = 1
-                travel_mode = by_bike
-                route_coordinates = find_route(latitude, longitude, dest_latitude, dest_longitude, travel_mode)
+
+                route_foot_start, route_bike , route_foot_end = full_route(df, latitude, longitude, dest_latitude, dest_longitude)
                 print("________________________ROUTING END________________________")
                 gdf, m = create_local_html_map(df, latitude or default_latitude, longitude or default_longitude,
-                                               rankings, dest_latitude, dest_longitude, route_coordinates)
+                                               rankings, dest_latitude, dest_longitude, route_bike, route_foot_start, route_foot_end)
             else:
                 gdf, m = create_local_html_map(df, latitude or default_latitude, longitude or default_longitude,
                                                rankings)

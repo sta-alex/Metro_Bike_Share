@@ -37,10 +37,10 @@
         <h2>User Input</h2>
         <form action="/" method="POST">
             <label class="input-label" for="latitude">Latitude:</label>
-            <input class="input-field" type="text" id="latitude" name="latitude" required><br><br>
+            <input class="input-field" type="text" id="latitude" name="latitude" placeholder="Latitude" required><br><br>
 
             <label class="input-label" for="longitude">Longitude:</label>
-            <input class="input-field" type="text" id="longitude" name="longitude" required><br><br>
+            <input class="input-field" type="text" id="longitude" name="longitude" placeholder="Longitude" required><br><br>
 
             <input class="submit-button" type="submit" value="Submit Location">
             <button class="clipboard-button" onclick="copyFromClipboard()">Copy from Clipboard</button>
@@ -52,12 +52,12 @@
                    placeholder="min"><br><br>
 
             <label class="input-label" for="rankings">Number of Rankings:</label>
-            <input class="input-field" type="text" id="rankings" name="rankings"><br><br>
+            <input class="input-field" type="text" id="rankings" name="rankings" placeholder="output number"><br><br>
 
             <label>Destination:</label>
             <input type="text" name="destLat" id="destLat" placeholder="Latitude">
             <input type="text" name="destLong" id="destLong" placeholder="Longitude"><br><br>
-            <input type="submit" value="Search Route"><br><br>
+            <input class ="submit-button" type="submit" value="Search Route"><br><br>
 
         </form>
 
