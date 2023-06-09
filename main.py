@@ -9,35 +9,43 @@ from shapely.geometry import Point
 
 # default starting point Los Angeles
 default_latitude, default_longitude = 34.04919, -118.24799
+# default number of k_nearest stations
 k_number_default = 5
+# CRS format to calculate routing
 crs_routing_format = "EPSG:4326"
+# CRS format displaying on the Open Street Map
 crs_map_format = "EPSG:3857"
+# Api key for the Open Route Service
 api_ORS_key = "5b3ce3597851110001cf62483a64689c0c234ddab368b092813c9dce"
+# 2 types of Open Route Service Routing ( by foot and by bike)
 by_bike = "cycling-regular"
 by_foot = "foot-walking"
 
 
 def get_GeoJSON():
+    # create a request to Metro Bike Share LA for retrieving data:
+    # url contains the link to the website
     url = "https://bikeshare.metro.net/stations/json"
+    # a header with user credentials is needed for the request, otherwise the request gets blocked from the website
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64) AppleWebkit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36",
         "Referer": "https://bikeshare.metro.net/stations/",
     }
-
+    # creating a folder to save the request
     data_folder = "data"
     data_file = os.path.join(data_folder, "geo_data.json")
-
     # Create the data folder if it doesn't exist
     if not os.path.exists(data_folder):
         os.makedirs(data_folder)
 
     try:
+        # send the request and catch the response
         response = requests.get(url, headers=headers)
-
+        # if the response is ok save the data
         if response.status_code == 200:
             data = response.json()
 
-            # Save the data to a file
+            # Save the data to a json file
             with open(data_file, "w") as file:
                 json.dump(data, file)
             print("Data saved successfully.")
@@ -45,7 +53,7 @@ def get_GeoJSON():
             json_data = "data/geo_data.json"
             jsonfile = open(json_data)
 
-            # create a save csv file
+            # read the json file and create a geopandas frame, also save data in a csv, just to be secure
             dfgeo = geopandas.read_file(jsonfile)
             jsonfile.close()
             dfgeo.to_csv("data/geo_station_live.csv")
@@ -53,7 +61,7 @@ def get_GeoJSON():
         else:  # e.g. response.status_code 404
 
             if os.path.exists(data_file):
-                # Load the data from the stored file
+                # Load the data from an previous stored file
                 with open(data_file, "r") as file:
                     data = json.load(file)
                 print("Failed to retrieve data. Using stored data.")
@@ -73,16 +81,18 @@ def get_GeoJSON():
             print("An error occurred. No stored data available.")
 
 
-# retrieves the GeoJSon from the Metro Bike Station Website
+# retrieves the GeoJSon Stationdata from the Metro Bike Station Website and saves it in a JSON and csv file
 get_GeoJSON()
 
-
-def create_dataframe():  # creates the Geodataframe and creates a csv
+# creates a Geopandas Dataframe(GeoDataFrame) out of an GeoJson file and also creates a csv file, just to be secure
+def create_dataframe():
+    # open json file
     json_data = "data/geo_data.json"
     jsonfile = open(json_data)
-    # geopanda dataframe
+    # creates a GeoDataFrame
     dfgeo = geopandas.read_file(jsonfile)
     jsonfile.close()
+    # creates a csv file out of the GeoDataFrame
     dfgeo.to_csv("data/geo_station_live.csv")
     return dfgeo
 
@@ -90,10 +100,28 @@ def create_dataframe():  # creates the Geodataframe and creates a csv
 # creates the csv files from json and returns geodataframe
 # df = create_dataframe()
 
-
 def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, destlong=0.0,
                           route_coordinates_bybike=None, route_foot_start=None, route_foot_end=None):
-    # Create a map centered at a specific location
+    """
+        Creates a local HTML map with markers for the user's current position, destination (if provided),
+        and nearest stations from the given dataframe. It also draws routes for walking and cycling with the Metro Bike.
+
+        Args:
+            dataframe: The input dataframe containing station data.
+            poslat: The latitude of the user's current position.
+            poslong: The longitude of the user's current position.
+            k_nearest: The number of nearest stations to retrieve.
+            destlat: The latitude of the destination position (default: 0.0).
+            destlong: The longitude of the destination position (default: 0.0).
+            route_coordinates_bybike: List of coordinates for the cycling route (default: None).
+            route_foot_start: List of coordinates for the walking route start (default: None).
+            route_foot_end: List of coordinates for the walking route end (default: None).
+
+        Returns:
+            df_nearest: The dataframe containing the k_nearest stations from the user's current position and destination.
+            m: The folium map object.
+        """
+
     if route_foot_end is None:
         route_foot_end = []
 
@@ -103,22 +131,21 @@ def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, de
     if route_coordinates_bybike is None:
         route_coordinates_bybike = []
 
+    # creating a map centered to the Position of LA, Map Format CRS is: EPSG:3857
     m = folium.Map(location=[poslat, poslong],
                    zoom_start=15,
                    control_scale=True,
                    crs='EPSG3857'
                    )
 
-    # Add My Position marker to the map
-    my_position = folium.Marker(location=[poslat, poslong],
-                                popup=f'Postition:\nlat: {poslat}\nlong: {poslong}',
-                                tooltip='My Position',
-                                icon=folium.Icon(color='black', icon="user")
-                                ).add_to(m)
+    # Add a Marker of the User's current Position add a popup and a hint showing the current lat and long coordinates
+    folium.Marker(location=[poslat, poslong],
+                  popup=f'Postition:\nlat: {poslat}\nlong: {poslong}', tooltip='My Position',
+                  icon=folium.Icon(color='black', icon="user")).add_to(m)
 
-    # returns a dataframe containing the k_nearest stations
+    # returns a dataframe containing the k_nearest stations from the Users current lat and long coordinates
     df_nearest = get_nearest_dataframe(dataframe, poslong, poslat, k_nearest)
-
+    # if a destination is selected create a second Maker showing the position of the destinations lat and long coordinates
     if not (destlat and destlong) == 0:
         folium.Marker(location=[destlat, destlong],
                       popup=f'Postition:\nlat: {destlat}\nlong: {destlong}',
@@ -126,24 +153,24 @@ def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, de
                       icon=folium.Icon(color='black', icon="user", prefix='fa')
                       ).add_to(m)
 
+        # creates a line from point to point out of an list of coordinates
+        # red is the line for walking, while blue is the line for cycling with the Metro Bike
         folium.PolyLine(locations=route_foot_start, color='red', weight=4).add_to(m)
         folium.PolyLine(locations=route_coordinates_bybike, color='blue', weight=4).add_to(m)
-        folium.PolyLine(locations=route_foot_end, color='orange', weight=4).add_to(m)
-
+        folium.PolyLine(locations=route_foot_end, color='red', weight=4).add_to(m)
+        # search for the destinations k_nearest stations and add them to the existing dataframe
         df_nearest_route = get_nearest_dataframe(dataframe, destlong, destlat, k_nearest)
         df_nearest = pandas.concat([df_nearest, df_nearest_route])
-        print("-------------------Combined Dataframe-------------------")
-        print(df_nearest)
 
-    # Add Station Markers to the map from the Geo dataframe
+    # Add a Marker for every Station
     for idx, row in dataframe.iterrows():
         long, lat = row['geometry'].x, row['geometry'].y
 
-        # retrieves right color and icon
+        # retrieves the right color and icon for a user friendlier interface
         color, icon = icon_color(row, df_nearest)
-        # creates marker for map
+        # creates a Marker with the color and the icon and also adds a Popup with necessary station information
         station_marker = create_markers(row, lat, long, color, icon)
-        # add marker to map
+        # adds the created marker to the map
         station_marker.add_to(m)
 
     # Add Clickable map that Copies lat and long to clipboard
@@ -156,6 +183,19 @@ def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, de
 
 
 def get_nearest_dataframe(dataframe, poslong, poslat, k_nearest):
+    """
+    Retrieves the nearest data points in a dataframe based on the given position.
+
+    Args:
+        dataframe: The input dataframe containing data points.
+        poslong: The longitude of the current position.
+        poslat: The latitude of the current position.
+        k_nearest: The number of nearest neighbors to retrieve.
+
+    Returns:
+        df_nearest: The dataframe containing the k_nearest neighbors to the current position.
+    """
+
     # create a Geometric Point of the current position
     my_position_point = create_point(poslat, poslong, crs_routing_format, crs_map_format)
     # Create a  temporary geodataframe only with necessary columns
@@ -167,8 +207,11 @@ def get_nearest_dataframe(dataframe, poslong, poslat, k_nearest):
 
     # Calculate the distances from the current position to all stations
     gdf['distance'] = gdf['geometry'].distance(my_position_point)
-    # sort the Dataframe by distances and get the k_nearest neighbours
+
+    # sort the Dataframe by distances
     gdf = gdf.sort_values(by='distance')
+
+    # creates a new dataframe where the KioskID matches the KioskID from the distance sorted Dataframe, containing
     df_nearest = dataframe[dataframe['kioskId'].isin(gdf['kioskId'].head(k_nearest))]
 
     return df_nearest
