@@ -34,7 +34,7 @@
     </header>
 
     <div class="user-input">
-        <h2>User Input</h2>
+        <h2>User Location</h2>
         <form action="/" method="POST">
             <label class="input-label" for="latitude">Latitude:</label>
             <input class="input-field" type="text" id="latitude" name="latitude" placeholder="Latitude" required><br><br>
@@ -43,16 +43,18 @@
             <input class="input-field" type="text" id="longitude" name="longitude" placeholder="Longitude" required><br><br>
 
             <input class="submit-button" type="submit" value="Submit Location">
-            <button class="clipboard-button" onclick="copyFromClipboard()">Copy from Clipboard</button>
+            <button class="clipboard-button" onclick="copyFromClipboard()">Copy from Clipboard</button><br>
             <br>
 
-            <label><input class="checkbox" type="checkbox" name="searchBike" id="searchBike"> Search Bike</label>
-            <label><input class="checkbox" type="checkbox" name="searchDocks" id="searchDocks"> Search Docks</label>
-            <input class="small-input" type="number" name="available_pieces" id="available_pieces"
-                   placeholder="min"><br><br>
+            <label class="input-label" for="searchBike"> Search Bikes only:</label>
+            <input class="checkbox" type="checkbox" name="searchBike" id="searchBike"><br>
+            <label class="input-label" for="searchDocks"> Search Docks only:</label>
+            <input class="checkbox" type="checkbox" name="searchDocks" id="searchDocks"><br>
+            <label class="input-label" for="available_pieces"> Availability:</label>
+            <input class="small-input" type="number" name="available_pieces" id="available_pieces" placeholder="min available pieces"><br><br>
 
-            <label class="input-label" for="rankings">Number of Rankings:</label>
-            <input class="input-field" type="text" id="rankings" name="rankings" placeholder="output number"><br><br>
+            <label class="input-label" for="rankings">Amout of Stations:</label>
+            <input class="small-input" type="text" id="rankings" name="rankings" placeholder="Search k_nearest Stations"><br><br>
 
             <label>Destination:</label>
             <input type="text" name="destLat" id="destLat" placeholder="Latitude">
@@ -86,7 +88,8 @@
     </div>
 
     <footer>
-        Data from: https://bikeshare.metro.net/stations/json
+        Data from: https://bikeshare.metro.net/stations/json<br>
+        Routing by: https://openrouteservice.org/
     </footer>
 
 </div>
