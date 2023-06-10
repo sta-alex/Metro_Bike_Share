@@ -3,4 +3,3 @@ geopandas
 pandas
 folium
 flask
-osmnx
