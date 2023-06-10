@@ -23,6 +23,13 @@ by_foot = "foot-walking"
 
 
 def get_GeoJSON():
+    """
+        Retrieves GeoJSON data from the Metro Bike Share LA website and saves it locally.
+
+        The function sends a request to the website, saves the retrieved data as a JSON file,
+        and creates a GeoPandas dataframe from the JSON file. It also saves the data in a CSV file.
+
+    """
     # create a request to Metro Bike Share LA for retrieving data:
     # url contains the link to the website
     url = "https://bikeshare.metro.net/stations/json"
@@ -50,12 +57,7 @@ def get_GeoJSON():
                 json.dump(data, file)
             print("Data saved successfully.")
 
-            json_data = "data/geo_data.json"
-            jsonfile = open(json_data)
-
-            # read the json file and create a geopandas frame, also save data in a csv, just to be secure
-            dfgeo = geopandas.read_file(jsonfile)
-            jsonfile.close()
+            dfgeo = create_dataframe()
             dfgeo.to_csv("data/geo_station_live.csv")
 
         else:  # e.g. response.status_code 404
@@ -81,11 +83,14 @@ def get_GeoJSON():
             print("An error occurred. No stored data available.")
 
 
-# retrieves the GeoJSon Stationdata from the Metro Bike Station Website and saves it in a JSON and csv file
-get_GeoJSON()
-
-# creates a Geopandas Dataframe(GeoDataFrame) out of an GeoJson file and also creates a csv file, just to be secure
 def create_dataframe():
+    """
+        Creates a GeoPandas DataFrame (GeoDataFrame) from a GeoJSON file and saves it as a CSV file.
+
+        Returns:
+        - dfgeo: GeoPandas DataFrame containing the data from the GeoJSON file.
+
+        """
     # open json file
     json_data = "data/geo_data.json"
     jsonfile = open(json_data)
@@ -218,34 +223,71 @@ def get_nearest_dataframe(dataframe, poslong, poslat, k_nearest):
 
 
 def icon_color(row, df_nearest):
+    """
+        Determines the color and icon for a station marker based on its status and availability.
+
+        Args:
+            row (Series): The row containing station information.
+            df_nearest (DataFrame): The dataframe containing the nearest stations.
+
+        Returns:
+            color (str): The color for the station marker.
+            icon (str): The icon for the station marker.
+        """
+    # station is active and has enough available bikes and docks
     if 'Active' in row['kioskPublicStatus'] and int(row['bikesAvailable']) > 5 and int(row['docksAvailable']) > 5:
+        # the nearest stations are highlighted
         if row['kioskId'] in df_nearest['kioskId'].values:
             color = 'darkgreen'
         else:
             color = 'green'
         icon = 'bicycle'
+
+    # station is active and has some bikes and docks
     elif 'Active' in row['kioskPublicStatus'] and int(row['bikesAvailable']) >= 2 and int(
             row['docksAvailable']) >= 2:
+        # the nearest stations are highlighted
         if row['kioskId'] in df_nearest['kioskId'].values:
             color = 'darkblue'
         else:
             color = 'blue'
         icon = 'bicycle'
+
+    # Station is unavailable or active but has low or no availability of bikes and docks
     elif 'Unavailable' in row['kioskPublicStatus'] or 'Active' in row['kioskPublicStatus']:
+        # the nearest stations are highlighted
         if row['kioskId'] in df_nearest['kioskId'].values:
             color = 'darkred'
         else:
             color = 'red'
         icon = 'bicycle'
+
+    # anything else, (error handling)
     else:
         color = 'gray'
         icon = 'magnifying-glass'
+
     return color, icon
 
 
 def create_markers(row, lat, long, color, icon):
+    """
+        Creates a marker for a station on the map.
+
+        Args:
+            row (Series): The row containing station information.
+            lat (float): The latitude of the station.
+            long (float): The longitude of the station.
+            color (str): The color for the marker.
+            icon (str): The icon for the marker.
+
+        Returns:
+            Marker: The marker for the station.
+        """
+
     station_name = row['name']
 
+    # create HTML content for the marker's popup
     popup_html = """
             <b>Name:</b> {}<br>
             <b>ID:</b> {}<br>
@@ -257,8 +299,10 @@ def create_markers(row, lat, long, color, icon):
             """.format(row['name'], row['kioskId'], row['addressStreet'], row['bikesAvailable'], row['docksAvailable'],
                        row['kioskPublicStatus'], row['openTime'], row['closeTime'])
 
+    # Create a popup for the marker with the HTML content
     popup = folium.Popup(html=popup_html, max_width=250)
 
+    # Create the marker with the specified location, tooltip, popup, color, and icon
     station_marker = folium.Marker(location=[lat, long],
                                    tooltip=f'{station_name}',
                                    popup=popup,
@@ -269,102 +313,198 @@ def create_markers(row, lat, long, color, icon):
 
 
 def save_map(m):
+    """
+        Saves the map as an HTML file.
+
+        Args:
+            m (Map): The map object to be saved.
+        """
     map_file = 'templates/map.html'
     m.save(map_file)
 
 
 def find_route(source_lat, source_long, dest_lat, dest_long, travel_type):
+    """
+        Finds a route between the source and destination coordinates using the OpenRouteService API.
+
+        Args:
+            source_lat (float): The latitude of the source location.
+            source_long (float): The longitude of the source location.
+            dest_lat (float): The latitude of the destination location.
+            dest_long (float): The longitude of the destination location.
+            travel_type (str): The type of travel ('foot', 'bike', 'car', etc.).
+
+        Returns:
+            list: A list of reversed coordinates representing the route.
+        """
+
+    # create folder, saving the route
     route_folder = "routes"
     data_file = os.path.join(route_folder, f'geo_data_route_{travel_type}.json')
-    #
     if not os.path.exists(route_folder):
         os.makedirs(route_folder)
 
+    # header for the request
     headers = {
         'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
     }
+
+    # make a request to the OpenRouteService API to get the route data
     call = requests.get(
         f'https://api.openrouteservice.org/v2/directions/{travel_type}?api_key={api_ORS_key}&start={source_long},{source_lat}&end={dest_long},{dest_lat}',
         headers=headers)
 
     data = json.loads(call.text)
-    # Save the data to a file
+
+    # Save the route data to a file
     with open(data_file, "w") as file:
         json.dump(data, file)
-    #
-    print(" Route Data saved successfully.")
-    #
-    #
+
     route_folder = "routes"
     data_file = os.path.join(route_folder, f'geo_data_route_{travel_type}.json')
     with open(data_file, 'r') as f:
         geojson_data = json.load(f)
 
+    # Extract the coordinates from the route data
     coordinates = geojson_data['features'][0]['geometry']['coordinates']
-    print(coordinates)
+
     # Reverse the order of coordinates (longitude, latitude) to (latitude, longitude)
     reversed_coordinates = [(coord[1], coord[0]) for coord in coordinates]
+
     return reversed_coordinates
 
 
 def create_point(lat, long, crs_in, crs_out):
+    """
+        Creates a geometric point with the specified latitude and longitude, and reprojects it to the desired CRS.
+
+        Args:
+            lat (float): The latitude of the point.
+            long (float): The longitude of the point.
+            crs_in (str): The CRS (Coordinate Reference System) of the input point.
+            crs_out (str): The desired CRS for the output point.
+
+        Returns:
+            shapely.geometry.Point: The reprojected point in the desired CRS.
+        """
+    # Create a point with the given latitude and longitude
     point = Point(long, lat)
+
+    # Create a GeoSeries with the point and assign the input CRS
     point = geopandas.GeoSeries([point], crs=crs_in)
+
+    # Reproject the point to the desired CRS
     point = point.to_crs(crs_out)
     print(f'Point from {crs_in} to {crs_out}: from {lat} , {long} to {point.iloc[0]}')
+
     return point.iloc[0]
 
 
 def select_bikes(df, drop_numbers):
+    """
+        Selects data points from a dataframe based on the number of available bikes.
+
+        Args:
+            df (pandas.DataFrame): The input dataframe containing data points.
+            drop_numbers (int): The threshold number of available bikes. Data points with fewer available bikes will be dropped.
+
+        Returns:
+            pandas.DataFrame: The dataframe containing the selected data points with sufficient available bikes.
+        """
+
+    # select the necessary columns from the dataframe and drop the data points where the number is too low
     df = df.loc[:, ('kioskId', 'name', 'addressStreet', 'addressCity', 'addressState', 'addressZipCode',
                     'bikesAvailable', 'classicBikesAvailable', 'smartBikesAvailable',
                     'electricBikesAvailable',
                     'docksAvailable', 'kioskPublicStatus', 'openTime', 'closeTime',
                     'latitude', 'longitude', 'geometry',)] \
         .drop(df[df['bikesAvailable'] <= drop_numbers].index)
+
     return df
 
 
 def select_docks(df, drop_numbers):
+    """
+        Selects data points from a dataframe based on the number of available docks.
+
+        Args:
+            df (pandas.DataFrame): The input dataframe containing data points.
+            drop_numbers (int): The threshold number of available docks. Data points with fewer available docks will be dropped.
+
+        Returns:
+            pandas.DataFrame: The dataframe containing the selected data points with sufficient available docks.
+        """
+
+    # select the necessary columns from the dataframe and drop the data points where the number is to low
     df = df.loc[:, ('kioskId', 'name', 'addressStreet', 'addressCity', 'addressState', 'addressZipCode',
                     'bikesAvailable', 'docksAvailable', 'kioskPublicStatus', 'openTime', 'closeTime',
                     'latitude', 'longitude', 'geometry',)] \
         .drop(df[df['docksAvailable'] <= drop_numbers].index)
+
     return df
 
 
 def request_lat_long(in_put):
+    """
+        Retrieves latitude or longitude value from the input form data.
+
+        Args:
+            in_put (str): The input parameter to retrieve from the form data.
+
+        Returns:
+            float: The retrieved latitude or longitude value. If not found, returns 0.0.
+    """
+    # get the value from the form data
     out_put = request.form.get(in_put)
+
+    # conversion to float if exist
     if out_put:
         out_put = float(out_put)
     else:
         out_put = 0.0
+
     return out_put
 
 
 def full_route(df, s_lat, s_long, d_lat, d_long):
+    """
+        Calculates the full route from the source position to the destination position using bike and foot.
+
+        Args:
+            df (DataFrame): The input dataframe containing station data.
+            s_lat (float): The latitude of the source position.
+            s_long (float): The longitude of the source position.
+            d_lat (float): The latitude of the destination position.
+            d_long (float): The longitude of the destination position.
+
+        Returns:
+            tuple: A tuple containing the route segments:
+                - start_to_station (list): The route from the source position to the nearest start station by foot.
+                - s_station_to_d_station (list): The route from the start station to the destination station by bike.
+                - d_station_to_end (list): The route from the destination station to the destination position by foot.
+        """
 
     # only the nearest stations and min availability = 1
     ranking = 1
 
-    # delete sations with no availability
+    # delete stations with no availability
     df = select_bikes(df, ranking)
     df = select_docks(df, ranking)
 
-    # distance from pos to start station
+    # Distance from source position to start station
     df_start_station = get_nearest_dataframe(df, s_long, s_lat, ranking)
     s_station_lat = df_start_station.loc[:, ('latitude')].item()
     print(s_station_lat)
     s_station_long = df_start_station.loc[:, ('longitude')].item()
     start_to_station = find_route(s_lat, s_long, s_station_lat, s_station_long, by_foot)
 
-    # distance from start station to end station
+    # Distance from start station to end station
     df_end_station = get_nearest_dataframe(df, d_long, d_lat, ranking)
     d_station_lat = df_end_station.loc[:, ('latitude')].item()
     d_station_long = df_end_station.loc[:, ('longitude')].item()
     s_station_to_d_station = find_route(s_station_lat, s_station_long, d_station_lat, d_station_long, by_bike)
 
-    # distance from end station to end pos
+    # Distance from end station to destination position
     d_station_to_end = find_route(d_station_lat, d_station_long, d_lat, d_long, by_foot)
 
     return start_to_station, s_station_to_d_station, d_station_to_end
@@ -403,10 +543,12 @@ def run_map_viewer():
             if dest_longitude and dest_latitude:
                 print("________________________ROUTING STARTED________________________")
 
-                route_foot_start, route_bike , route_foot_end = full_route(df, latitude, longitude, dest_latitude, dest_longitude)
+                route_foot_start, route_bike, route_foot_end = full_route(df, latitude, longitude, dest_latitude,
+                                                                          dest_longitude)
                 print("________________________ROUTING END________________________")
                 gdf, m = create_local_html_map(df, latitude or default_latitude, longitude or default_longitude,
-                                               rankings, dest_latitude, dest_longitude, route_bike, route_foot_start, route_foot_end)
+                                               rankings, dest_latitude, dest_longitude, route_bike, route_foot_start,
+                                               route_foot_end)
             else:
                 gdf, m = create_local_html_map(df, latitude or default_latitude, longitude or default_longitude,
                                                rankings)
@@ -424,4 +566,8 @@ def run_map_viewer():
         app.run(debug=True)
 
 
+# retrieves the GeoJSon Stationdata
+get_GeoJSON()
+
+# run
 run_map_viewer()
