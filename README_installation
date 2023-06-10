@@ -1,4 +1,5 @@
 This file contains an Installation Guide to the Metro_Bike_Share Project
+
     - download and install anaconda: https://www.anaconda.com/
     - try "python --version" should return installed version
     - It should return at least Python 3.9
