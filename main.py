@@ -1,6 +1,8 @@
 # ________________Imports________________
 from flask import Flask, render_template
 from functions import *
+
+
 # _______________________________________
 
 # ________________VALUES________________
@@ -12,7 +14,7 @@ k_number_default = 5
 crs_routing_format = "EPSG:4326"
 # CRS format displaying on the Open Street Map
 crs_map_format = "EPSG:3857"
-
+browser_open = 1
 # 2 types of Open Route Service Routing ( by foot and by bike)
 by_bike = "cycling-regular"
 by_foot = "foot-walking"
@@ -33,7 +35,9 @@ def run_map_viewer():
     app = Flask(__name__)
 
     @app.route('/', methods=['GET', 'POST'])
+
     def index():
+
         # Create the initial GeoDataFrame
         df = create_dataframe()
         if request.method == 'POST':
@@ -87,11 +91,17 @@ def run_map_viewer():
         return render_template('index.html', latitude=default_latitude, longitude=default_longitude,
                                df_html=gdf.to_html(index=False))
 
+
     if __name__ == '__main__':
+        open_browser()
         app.run(debug=True)
+
+
 
 
 # retrieves the GeoJSon Stationdata
 get_GeoJSON()
 # run
+
 run_map_viewer()
+input("Press Enter to exit...")

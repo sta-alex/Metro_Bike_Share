@@ -51,10 +51,10 @@
             <label class="input-label" for="searchDocks"> Search Docks only:</label>
             <input class="checkbox" type="checkbox" name="searchDocks" id="searchDocks"><br>
             <label class="input-label" for="available_pieces"> Availability:</label>
-            <input class="small-input" type="number" name="available_pieces" id="available_pieces" placeholder="min available pieces"><br><br>
+            <input class="small-input" type="number" min="0" name="available_pieces" id="available_pieces" placeholder="min available pieces"><br><br>
 
             <label class="input-label" for="rankings">Amout of Stations:</label>
-            <input class="small-input" type="text" id="rankings" name="rankings" placeholder="Search k_nearest Stations"><br><br>
+            <input class="small-input" type="number" min="0" id="rankings" name="rankings" placeholder="Search k_nearest Stations"><br><br>
 
             <label>Destination:</label>
             <input type="text" name="destLat" id="destLat" placeholder="Latitude">

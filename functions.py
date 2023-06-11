@@ -6,6 +6,7 @@ import pandas
 import requests
 from flask import request
 from shapely.geometry import Point
+import webbrowser
 
 # CRS format to calculate routing
 crs_routing_format = "EPSG:4326"
@@ -389,7 +390,7 @@ def create_point(lat, long, crs_in, crs_out):
 
     # Reproject the point to the desired CRS
     point = point.to_crs(crs_out)
-    print(f'Point from {crs_in} to {crs_out}: from {lat} , {long} to {point.iloc[0]}')
+    # print(f'Point from {crs_in} to {crs_out}: from {lat} , {long} to {point.iloc[0]}')
 
     return point.iloc[0]
 
@@ -501,3 +502,11 @@ def full_route(df, s_lat, s_long, d_lat, d_long):
     d_station_to_end = find_route(d_station_lat, d_station_long, d_lat, d_long, by_foot)
 
     return start_to_station, s_station_to_d_station, d_station_to_end
+
+
+def open_browser():
+    """
+        Opens the web browser and navigates to the local Flask web application.
+
+        """
+    webbrowser.open('http://localhost:5000')

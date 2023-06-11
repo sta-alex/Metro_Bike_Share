@@ -16,5 +16,5 @@ This file contains an Installation Guide to the Metro_Bike_Share Project
     - install the packages with the pip installer needed for this project run in the Pycharm terminal:
         pip install -r ./resources.txt
     - if the python env interpreter is not automatically added, add the interpreter as virtual environment use the env
-      folder from this project
+      folder from this project: Go to pycharm settings go to Project Folder to the Python Interpreter
     - run the project
