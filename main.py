@@ -34,6 +34,10 @@ def run_map_viewer():
 
     app = Flask(__name__)
 
+    @app.route('/favicon.ico')
+    def ignore_favicon():
+        return app.response_class(status=204)
+
     @app.route('/', methods=['GET', 'POST'])
 
     def index():
@@ -60,12 +64,16 @@ def run_map_viewer():
 
             # Prepare Task 1: Filter stations by bike availability
             if search_bikes:
+                print("Task 1:")
                 df = select_bikes(df, drop_if_number)
 
             # Prepare Task 2: Filter stations by dock availability
             if search_docks:
+                print("Task 2:")
                 df = select_docks(df, drop_if_number)
+            # Prepare Task 3: Routing from Source to Destination
             if dest_longitude and dest_latitude:
+                print("Task 3:")
                 print("________________________ROUTING STARTED________________________")
                 # Perform routing tasks
                 route_foot_start, route_bike, route_foot_end = full_route(df, latitude, longitude, dest_latitude,
