@@ -1,16 +1,28 @@
 import json
 import os
+import timeit
+import webbrowser
+
 import folium
 import geopandas
 import pandas
 import requests
 from flask import request
 from shapely.geometry import Point
-import webbrowser
-import timeit
 
 
 def timeit_decorator(n=1):
+    """
+        Decorator function to measure the execution time of a function.
+
+        Args:
+            n (int): Number of times the function should be executed.
+
+        Returns:
+            function: Decorator function.
+
+        """
+
     def decorator(func):
         def timed_func(*args, **kwargs):
             total_execution_time = 0
@@ -103,7 +115,6 @@ def get_GeoJSON():
             print("An error occurred. No stored data available.")
 
 
-
 def create_dataframe():
     """
         Creates a GeoPandas DataFrame (GeoDataFrame) from a GeoJSON file and saves it as a CSV file.
@@ -121,7 +132,6 @@ def create_dataframe():
     # creates a csv file out of the GeoDataFrame
     dfgeo.to_csv("data/geo_station_live.csv")
     return dfgeo
-
 
 
 def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, destlong=0.0,
@@ -204,7 +214,6 @@ def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, de
     save_map(m)
 
     return df_nearest, m
-
 
 
 def get_nearest_dataframe(dataframe, poslong, poslat, k_nearest):
@@ -341,7 +350,6 @@ def save_map(m):
         """
     map_file = 'templates/map.html'
     m.save(map_file)
-
 
 
 def find_route(source_lat, source_long, dest_lat, dest_long, travel_type):
@@ -485,7 +493,6 @@ def request_lat_long(in_put):
         out_put = 0.0
 
     return out_put
-
 
 
 def full_route(df, s_lat, s_long, d_lat, d_long):

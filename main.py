@@ -2,7 +2,6 @@
 from flask import Flask, render_template
 from functions import *
 
-
 # _______________________________________
 
 # ________________VALUES________________
@@ -18,6 +17,8 @@ browser_open = 1
 # 2 types of Open Route Service Routing ( by foot and by bike)
 by_bike = "cycling-regular"
 by_foot = "foot-walking"
+
+
 # ______________________________________
 
 
@@ -39,7 +40,6 @@ def run_map_viewer():
         return app.response_class(status=204)
 
     @app.route('/', methods=['GET', 'POST'])
-
     def index():
 
         # Create the initial GeoDataFrame
@@ -99,12 +99,9 @@ def run_map_viewer():
         return render_template('index.html', latitude=default_latitude, longitude=default_longitude,
                                df_html=gdf.to_html(index=False))
 
-
     if __name__ == '__main__':
         open_browser()
         app.run(debug=True)
-
-
 
 
 # retrieves the GeoJSon Stationdata
