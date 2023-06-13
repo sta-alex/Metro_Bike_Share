@@ -110,6 +110,5 @@ def run_map_viewer():
 # retrieves the GeoJSon Stationdata
 get_GeoJSON()
 # run
-
 run_map_viewer()
 input("Press Enter to exit...")

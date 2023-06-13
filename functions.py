@@ -7,6 +7,28 @@ import requests
 from flask import request
 from shapely.geometry import Point
 import webbrowser
+import timeit
+
+
+def timeit_decorator(n=1):
+    def decorator(func):
+        def timed_func(*args, **kwargs):
+            total_execution_time = 0
+            for _ in range(n):
+                start_time = timeit.default_timer()
+                result = func(*args, **kwargs)
+                end_time = timeit.default_timer()
+                execution_time = end_time - start_time
+                total_execution_time += execution_time
+            average_execution_time = total_execution_time / n
+            print(f"Function {func.__name__} executed an average of {n} times")
+            print(f"Average execution time: {average_execution_time} seconds")
+            return result
+
+        return timed_func
+
+    return decorator
+
 
 # CRS format to calculate routing
 crs_routing_format = "EPSG:4326"
@@ -81,6 +103,7 @@ def get_GeoJSON():
             print("An error occurred. No stored data available.")
 
 
+
 def create_dataframe():
     """
         Creates a GeoPandas DataFrame (GeoDataFrame) from a GeoJSON file and saves it as a CSV file.
@@ -98,6 +121,7 @@ def create_dataframe():
     # creates a csv file out of the GeoDataFrame
     dfgeo.to_csv("data/geo_station_live.csv")
     return dfgeo
+
 
 
 def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, destlong=0.0,
@@ -180,6 +204,7 @@ def create_local_html_map(dataframe, poslat, poslong, k_nearest, destlat=0.0, de
     save_map(m)
 
     return df_nearest, m
+
 
 
 def get_nearest_dataframe(dataframe, poslong, poslat, k_nearest):
@@ -316,6 +341,7 @@ def save_map(m):
         """
     map_file = 'templates/map.html'
     m.save(map_file)
+
 
 
 def find_route(source_lat, source_long, dest_lat, dest_long, travel_type):
@@ -459,6 +485,7 @@ def request_lat_long(in_put):
         out_put = 0.0
 
     return out_put
+
 
 
 def full_route(df, s_lat, s_long, d_lat, d_long):
